@@ -73,6 +73,7 @@ var ExpCmd = &cobra.Command{
 		}
 		log.SetLevel(logLevel)
 		log.SetOutput(os.Stdout)
+		nginx_ingress.Init()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var payload nginx_ingress.Payload
@@ -97,7 +98,7 @@ var ExpCmd = &cobra.Command{
 		}
 		if Opts.DryRun {
 			log.Infoln("dry-run mode, payload:")
-			fmt.Println(string(payload))
+			_, _ = os.Stdout.Write(payload)
 			return
 		}
 		log.Tracef("mode chosen: %s", Opts.Mode)
