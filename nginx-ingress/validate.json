@@ -36,7 +36,6 @@
         "creationTimestamp": null,
         "annotations": {
           "nginx.ingress.kubernetes.io/auth-url": "foobar",
-          "nginx.ingress.kubernetes.io/rewrite-target": "/"
         }
       },
       "spec": {
