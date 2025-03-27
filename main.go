@@ -30,8 +30,9 @@ var Opts = struct {
 	FdRangeStart  int
 	FdRangeEnd    int
 
-	OnlyAdmission bool
-	OnlyUpload    bool
+	OnlyAdmission         bool
+	OnlyAdmissionFilePath string
+	OnlyUpload            bool
 }{}
 
 func defaultPodIp() net.IP {
@@ -65,7 +66,9 @@ func init() {
 
 	ExpCmd.PersistentFlags().CountVarP(&Opts.Verbose, "verbose", "v", "verbose output")
 	ExpCmd.PersistentFlags().BoolVarP(&Opts.DryRun, "dry-run", "d", false, "dry run and dump payload")
+
 	ExpCmd.Flags().BoolVarP(&Opts.OnlyAdmission, "only-admission", "o", false, "only admission")
+	ExpCmd.Flags().StringVarP(&Opts.OnlyAdmissionFilePath, "only-admission-file", "f", "", "only admission file")
 	ExpCmd.Flags().BoolVarP(&Opts.OnlyUpload, "only-upload", "O", false, "only upload")
 
 	ExpCmd.Flags().IntVarP(&Opts.PidRangeStart, "pid-range-start", "S", 10, "pid range start")
@@ -110,7 +113,10 @@ var ExpCmd = &cobra.Command{
 			return
 		}
 		if Opts.OnlyAdmission {
-			nginx_ingress.OnlyAdmissionRequest(Opts.IngressWebhookUrl)
+			if Opts.OnlyAdmissionFilePath == "" {
+				log.Fatal("only-admission-file is required")
+			}
+			nginx_ingress.OnlyAdmissionRequest(Opts.IngressWebhookUrl, Opts.OnlyAdmissionFilePath)
 			return
 		}
 		if Opts.OnlyUpload {
