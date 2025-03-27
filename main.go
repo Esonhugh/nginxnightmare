@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	nginx_ingress "ingressnightmare/nginx-ingress"
 	"net"
 	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	nginx_ingress "ingressnightmare/nginx-ingress"
 )
 
 var Opts = struct {
@@ -63,7 +64,7 @@ func init() {
 	ExpCmd.Flags().StringVarP(&Opts.Command, "command", "c", "", "command")
 
 	ExpCmd.PersistentFlags().CountVarP(&Opts.Verbose, "verbose", "v", "verbose output")
-	ExpCmd.PersistentFlags().BoolVarP(&Opts.DryRun, "dry-run", "d", false, "dry run")
+	ExpCmd.PersistentFlags().BoolVarP(&Opts.DryRun, "dry-run", "d", false, "dry run and dump payload")
 	ExpCmd.Flags().BoolVarP(&Opts.OnlyAdmission, "only-admission", "o", false, "only admission")
 	ExpCmd.Flags().BoolVarP(&Opts.OnlyUpload, "only-upload", "O", false, "only upload")
 
