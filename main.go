@@ -71,10 +71,10 @@ func init() {
 	ExpCmd.Flags().StringVarP(&Opts.OnlyAdmissionFilePath, "only-admission-file", "f", "", "only admission file")
 	ExpCmd.Flags().BoolVarP(&Opts.OnlyUpload, "only-upload", "O", false, "only upload")
 
-	ExpCmd.Flags().IntVarP(&Opts.PidRangeStart, "pid-range-start", "S", 10, "pid range start")
-	ExpCmd.Flags().IntVarP(&Opts.PidRangeEnd, "pid-range-end", "E", 10, "distance to pid range end")
-	ExpCmd.Flags().IntVarP(&Opts.FdRangeStart, "fd-range-start", "s", 5, "fd range start")
-	ExpCmd.Flags().IntVarP(&Opts.FdRangeEnd, "fd-range-end", "e", 20, "distance fd range end")
+	ExpCmd.Flags().IntVarP(&Opts.PidRangeStart, "pid-range-start", "S", 5, "pid range start")
+	ExpCmd.Flags().IntVarP(&Opts.PidRangeEnd, "pid-range-end", "E", 40, "distance to pid range end")
+	ExpCmd.Flags().IntVarP(&Opts.FdRangeStart, "fd-range-start", "s", 3, "fd range start")
+	ExpCmd.Flags().IntVarP(&Opts.FdRangeEnd, "fd-range-end", "e", 26, "distance fd range end")
 }
 
 var ExpCmd = &cobra.Command{
@@ -132,7 +132,6 @@ var ExpCmd = &cobra.Command{
 }
 
 func main() {
-
 	if err := ExpCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
