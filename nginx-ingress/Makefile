@@ -1,6 +1,6 @@
 
 build:
-	gcc -fPIC -shared -o danger.so danger.c
+	gcc -fPIC -nostdlib -ffreestanding -fno-builtin -o danger.so danger.c -shared
 	readelf -a ./danger.so
 
 test: 
