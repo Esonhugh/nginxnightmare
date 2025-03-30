@@ -36,7 +36,11 @@
         "name": "minimal-ingress",
         "namespace": "default",
         "creationTimestamp": null,
+        {{- if .IsMirrorWithUID }}
+        "uid": "InjectTest#;\n\n}\n}\n}\nssl_engine foobar",{{- end }}
         "annotations": {
+          {{- if .IsMirrorWithUID }}
+          "nginx.ingress.kubernetes.io/mirror-target": "fake-mirror-target"{{- end }}
           {{- if .IsAuthTLSMatchCN }}
           "nginx.ingress.kubernetes.io/auth-tls-match-cn": "CN=abc #(\n){}\n }}\nssl_engine foobar;\n#",
           "nginx.ingress.kubernetes.io/auth-tls-secret": "{{.AuthSecret}}"{{- end }}
